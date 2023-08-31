@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  twitchUsername  String?
+  discordUsername String?
+  stars           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+model Command {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String @unique
+  content String
+}
+
+model Guild {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  guildId   String   @unique
+  name      String   @unique
+  bank      Int      @default(0)
+  color     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model DeathCounter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  active    Boolean  @default(false)
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
