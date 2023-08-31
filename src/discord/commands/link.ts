@@ -63,24 +63,46 @@ module.exports = {
           )}`
         );
       if (!twitchUser?.discordUsername) {
-        await prismaClient.user.updateMany({
-          where: {
-            twitchUsername: userInput,
-          },
-          data: {
-            discordUsername: interaction.user.username?.toLocaleLowerCase(),
-          },
-        });
+        await prismaClient.user
+          .updateMany({
+            where: {
+              twitchUsername: userInput,
+            },
+            data: {
+              discordUsername: interaction.user.username?.toLocaleLowerCase(),
+              stars: { increment: discordUser?.stars },
+            },
+          })
+          .then(async (res) => {
+            await prismaClient.user.deleteMany({
+              where: {
+                discordUsername: interaction.user.username?.toLocaleLowerCase(),
+                twitchUsername: { isSet: false },
+              },
+            });
+          });
+
         await modalInteraction.editReply({ embeds: [successEmbed] });
       } else if (!discordUser?.twitchUsername) {
-        await prismaClient.user.updateMany({
-          where: {
-            discordUsername: interaction.user.username?.toLocaleLowerCase(),
-          },
-          data: {
-            twitchUsername: userInput,
-          },
-        });
+        await prismaClient.user
+          .updateMany({
+            where: {
+              discordUsername: interaction.user.username?.toLocaleLowerCase(),
+            },
+            data: {
+              twitchUsername: userInput,
+              stars: { increment: twitchUser?.stars },
+            },
+          })
+          .then(async (res) => {
+            await prismaClient.user.deleteMany({
+              where: {
+                twitchUsername: twitchUser?.twitchUsername,
+                discordUsername: { isSet: false },
+              },
+            });
+          });
+
         await modalInteraction.editReply({ embeds: [successEmbed] });
       }
     }

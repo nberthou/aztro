@@ -6,7 +6,7 @@ import { getEmoji } from './utils';
 
 type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
-export const client: DiscordClient = new Client({ intents: [GatewayIntentBits.Guilds] });
+export const client: DiscordClient = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 async function main() {
   const token = process.env.DISCORD_TOKEN ?? '';
 
