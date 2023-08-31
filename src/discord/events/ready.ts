@@ -27,10 +27,8 @@ module.exports = {
       }
 
       clientCommands = clientCommands.map((command) => command.data.toJSON());
-      rest
-        .put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
-        .then(() => console.log('Successfully deleted all guild commands.'))
-        .catch(console.error);
+      const guild = getGuild();
+      guild?.commands.set([]);
 
       const data = (await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: clientCommands })) as any[];
       console.log(`${data.length} commandes ont été actualisées.`);
