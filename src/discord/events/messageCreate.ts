@@ -6,11 +6,6 @@ type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 module.exports = {
   name: Events.MessageCreate,
   async execute(message: Message) {
-    const allUsers = await prismaClient.user.findMany({
-      where: {
-        discordUsername: message.author.username,
-      },
-    });
     const currentUser = await prismaClient.user.findFirst({
       where: {
         discordUsername: message.author.username,
