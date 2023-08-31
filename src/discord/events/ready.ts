@@ -1,5 +1,6 @@
 import { Events, Client, Collection, REST, Routes } from 'discord.js';
 import { prismaClient } from '../../utils';
+import { getGuild } from '../utils';
 
 type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
@@ -24,6 +25,9 @@ module.exports = {
       for (const key of client.commands!.keys()) {
         clientCommands.push(client.commands?.get(key));
       }
+      const guild = getGuild();
+      console.debug('ready.ts  l.26', await guild?.commands.fetch());
+
       clientCommands = clientCommands.map((command) => command.data.toJSON());
       const data = (await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: clientCommands })) as any[];
       console.log(`${data.length} commandes ont été actualisées.`);

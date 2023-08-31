@@ -1,7 +1,5 @@
-import { CacheType, Client, Collection, Events, Message } from 'discord.js';
+import { Events, Message } from 'discord.js';
 import { prismaClient } from '../../utils';
-
-type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
 module.exports = {
   name: Events.MessageCreate,
