@@ -25,10 +25,13 @@ module.exports = {
       for (const key of client.commands!.keys()) {
         clientCommands.push(client.commands?.get(key));
       }
-      const guild = getGuild();
-      console.debug('ready.ts  l.26', await guild?.commands.fetch());
 
       clientCommands = clientCommands.map((command) => command.data.toJSON());
+      rest
+        .put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
+        .then(() => console.log('Successfully deleted all guild commands.'))
+        .catch(console.error);
+
       const data = (await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: clientCommands })) as any[];
       console.log(`${data.length} commandes ont été actualisées.`);
     } catch (error) {
