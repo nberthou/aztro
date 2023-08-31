@@ -11,11 +11,6 @@ module.exports = {
         discordUsername: message.author.username,
       },
     });
-
-    console.debug('--------------------------------------------');
-    console.debug('messageCreate.ts interaction l.8', allUsers);
-    console.debug('--------------------------------------------');
-
     const currentUser = await prismaClient.user.findFirst({
       where: {
         discordUsername: message.author.username,
