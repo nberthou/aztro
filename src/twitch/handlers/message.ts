@@ -15,6 +15,9 @@ export type CommandProps = {
 
 export const handleMessages = (chatClient: ChatClient) => {
   chatClient.onMessage(async (channel, user, message, msg) => {
+    console.debug('--------------------------------------------');
+    console.debug('message.ts user l.17', user);
+    console.debug('--------------------------------------------');
     const allCommands = await prismaClient.command.findMany();
     const currentUser = await prismaClient.user.findFirst({
       where: { twitchUsername: user.toLocaleLowerCase() },

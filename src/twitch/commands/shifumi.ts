@@ -12,10 +12,12 @@ type ShifumiProps = {
 const shifumi = async ({ chatClient, userChoice, currentUser, amount }: ShifumiProps) => {
   const choices = ['pierre', 'feuille', 'ciseaux'];
   const computerChoice = choices[Math.floor(Math.random() * choices.length)];
-  const userHasWon =
-    (userChoice === 'pierre' && computerChoice === 'ciseaux') ||
-    (userChoice === 'feuille' && computerChoice === 'pierre') ||
-    (userChoice === 'ciseaux' && computerChoice === 'feuille');
+  const WINNING_COMBINATIONS = {
+    pierre: 'ciseaux',
+    feuille: 'pierre',
+    ciseaux: 'feuille',
+  };
+  const userHasWon = WINNING_COMBINATIONS[userChoice] === computerChoice;
 
   if (userChoice === computerChoice) {
     chatClient.say(
