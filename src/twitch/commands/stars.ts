@@ -1,11 +1,11 @@
-import { ChatClient } from '@twurple/chat';
-import { prismaClient } from '../../utils';
 import type { CommandProps } from '../handlers/message';
+import { User } from '../../classes/User';
 
 export const handleStarsCommand = async ({ chatClient, user, message, channel }: CommandProps) => {
-  const currentUser = await prismaClient.user.findFirst({
-    where: { twitchUsername: user.toLowerCase() },
-  });
+  const currentUserInstance = new User(user.toLocaleLowerCase());
+  const userWallet = await currentUserInstance.getWallet();
+  const userStars = await userWallet.getStars();
+
   if (message.startsWith('!stars')) {
     switch (message.split(' ')[1]) {
       case 'give':
@@ -16,47 +16,38 @@ export const handleStarsCommand = async ({ chatClient, user, message, channel }:
         if (!isNaN(parseInt(recipientUsername))) {
           chatClient.say(
             channel,
-            `@${currentUser?.twitchUsername}, tu dois spécifier l'utilisateur à qui tu veux donner les étoiles.`
+            `@${currentUserInstance?.twitchUsername}, tu dois spécifier l'utilisateur à qui tu veux donner les étoiles.`
           );
         } else {
-          const recipient = await prismaClient.user.findFirst({
-            where: { twitchUsername: recipientUsername },
-          });
+          const recipientInstance = new User(recipientUsername.toLocaleLowerCase());
+          const recipient = await recipientInstance.getUser();
           if (!recipient) {
             chatClient.say(
               channel,
-              `@${currentUser?.twitchUsername}, l'utilisateur que tu as spécifié n'a pas encore été présent sur le stream.`
+              `@${currentUserInstance?.twitchUsername}, l'utilisateur que tu as spécifié n'a pas encore été présent sur le stream.`
             );
           } else {
             if (!message.split(' ')[3]) {
-              chatClient.say(channel, `@${currentUser?.twitchUsername}, tu dois spécifier un montant d'étoiles à donner.`);
+              chatClient.say(
+                channel,
+                `@${currentUserInstance?.twitchUsername}, tu dois spécifier un montant d'étoiles à donner.`
+              );
             } else {
               const amount = parseInt(message.split(' ')[3]);
               if (isNaN(amount)) {
                 chatClient.say(
                   channel,
-                  `@${currentUser?.twitchUsername}, le nombre d'étoiles que tu as spécifié n'est pas valide.`
+                  `@${currentUserInstance?.twitchUsername}, le nombre d'étoiles que tu as spécifié n'est pas valide.`
                 );
-              } else if (amount > (currentUser?.stars ?? 0)) {
-                chatClient.say(channel, `@${currentUser?.twitchUsername}, tu n'as pas assez d'étoiles...`);
+              } else if (amount > (userStars ?? 0)) {
+                chatClient.say(channel, `@${currentUserInstance?.twitchUsername}, tu n'as pas assez d'étoiles...`);
               } else {
-                await prismaClient.user.update({
-                  where: { id: recipient?.id },
-                  data: {
-                    stars: { increment: amount },
-                    updatedAt: new Date(),
-                  },
-                });
-                await prismaClient.user.update({
-                  where: { id: currentUser?.id },
-                  data: {
-                    stars: { decrement: amount },
-                    updatedAt: new Date(),
-                  },
-                });
+                const recipientWallet = await recipientInstance.getWallet();
+                await recipientWallet.earnStars(amount);
+                await userWallet.spendStars(amount);
                 chatClient.say(
                   channel,
-                  `@${currentUser?.twitchUsername}, tu as bel et bien donné ${amount} étoiles à @${recipient.twitchUsername} ! Merci pour ta générosité ! azgoldHF`
+                  `@${currentUserInstance?.twitchUsername}, tu as bel et bien donné ${amount} étoiles à @${recipient.twitchUsername} ! Merci pour ta générosité ! azgoldHF`
                 );
               }
             }
@@ -68,8 +59,8 @@ export const handleStarsCommand = async ({ chatClient, user, message, channel }:
       default:
         chatClient.say(
           channel,
-          `@${currentUser?.twitchUsername}, tu as actuellement ${currentUser?.stars} étoile${
-            currentUser?.stars && currentUser?.stars > 1 ? 's' : ''
+          `@${currentUserInstance.twitchUsername}, tu as actuellement ${userStars} étoile${
+            userStars && userStars > 1 ? 's' : ''
           } ! azgoldStar`
         );
         break;

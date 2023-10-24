@@ -1,5 +1,5 @@
 import { ChatClient } from '@twurple/chat';
-import { prismaClient } from '../../utils';
+import { User } from '../../classes/User';
 
 const giftCounts = new Map<string | undefined, number>();
 
@@ -7,22 +7,13 @@ export const handleCommunitySubs = (chatClient: ChatClient) => {
   chatClient.onCommunitySub(async (channel, user, subInfo) => {
     const previousCountGift = giftCounts.get(user) ?? 0;
     giftCounts.set(user, previousCountGift + subInfo.count);
-    const currentUser = await prismaClient.user.findFirst({ where: { twitchUsername: user.toLocaleLowerCase() } });
+    const currentUserInstance = new User(user.toLocaleLowerCase());
+    const currentUser = await currentUserInstance.getUser();
     if (!currentUser) {
-      prismaClient.user.create({
-        data: {
-          twitchUsername: user.toLocaleLowerCase(),
-          stars: 150 * subInfo.count,
-        },
-      });
+      await currentUserInstance.createUser({ initialStars: 150 * subInfo.count });
     } else {
-      prismaClient.user.update({
-        where: { id: currentUser?.id },
-        data: {
-          stars: currentUser.stars + 150 * subInfo.count,
-          updatedAt: new Date(),
-        },
-      });
+      const userWallet = await currentUserInstance.getWallet();
+      await userWallet.earnStars(150 * subInfo.count);
     }
     chatClient.say(
       channel,
@@ -35,22 +26,13 @@ export const handleCommunitySubs = (chatClient: ChatClient) => {
 
 export const handleSubs = (chatClient: ChatClient) => {
   chatClient.onSub(async (channel, user, {}) => {
-    const currentUser = await prismaClient.user.findFirst({ where: { twitchUsername: user.toLocaleLowerCase() } });
+    const currentUserInstance = new User(user.toLocaleLowerCase());
+    const currentUser = await currentUserInstance.getUser();
     if (!currentUser) {
-      await prismaClient.user.create({
-        data: {
-          twitchUsername: user.toLocaleLowerCase(),
-          stars: 50,
-        },
-      });
+      await currentUserInstance.createUser({ initialStars: 50 });
     } else {
-      await prismaClient.user.update({
-        where: { id: currentUser?.id },
-        data: {
-          stars: { increment: 50 },
-          updatedAt: new Date(),
-        },
-      });
+      const userWallet = await currentUserInstance.getWallet();
+      await userWallet.earnStars(50);
     }
     chatClient.say(channel, `Merci pour le sub ${user} ! En remerciements, prends donc ces 50 étoiles ! azgoldLove`);
   });
@@ -58,22 +40,13 @@ export const handleSubs = (chatClient: ChatClient) => {
 
 export const handleResubs = (chatClient: ChatClient) => {
   chatClient.onResub(async (channel, user, { months, displayName }) => {
-    const currentUser = await prismaClient.user.findFirst({ where: { twitchUsername: user.toLocaleLowerCase() } });
+    const currentUserInstance = new User(user.toLocaleLowerCase());
+    const currentUser = await currentUserInstance.getUser();
     if (!currentUser) {
-      await prismaClient.user.create({
-        data: {
-          twitchUsername: user.toLocaleLowerCase(),
-          stars: 50 * months,
-        },
-      });
+      await currentUserInstance.createUser({ initialStars: 50 * months });
     } else {
-      await prismaClient.user.update({
-        where: { id: currentUser?.id },
-        data: {
-          stars: { increment: 50 * months },
-          updatedAt: new Date(),
-        },
-      });
+      const userWallet = await currentUserInstance.getWallet();
+      await userWallet.earnStars(50 * months);
     }
     chatClient.say(
       channel,
@@ -91,22 +64,13 @@ export const handleSubGifts = (chatClient: ChatClient) => {
     if (previousCountGift > 0) {
       giftCounts.set(user, previousCountGift - 1);
     } else {
-      const currentUser = await prismaClient.user.findFirst({ where: { twitchUsername: user?.toLocaleLowerCase() } });
+      const currentUserInstance = new User(user?.toLocaleLowerCase());
+      const currentUser = await currentUserInstance.getUser();
       if (!currentUser) {
-        await prismaClient.user.create({
-          data: {
-            twitchUsername: user?.toLocaleLowerCase(),
-            stars: 150,
-          },
-        });
+        await currentUserInstance.createUser({ initialStars: 150 });
       } else {
-        await prismaClient.user.update({
-          where: { id: currentUser?.id },
-          data: {
-            stars: { increment: 150 },
-            updatedAt: new Date(),
-          },
-        });
+        const userWallet = await currentUserInstance.getWallet();
+        await userWallet.earnStars(150);
       }
       chatClient.say(
         channel,

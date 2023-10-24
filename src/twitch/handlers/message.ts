@@ -4,6 +4,7 @@ import { handleShifumiCommand } from '../commands/shifumi';
 import { handleStarsCommand } from '../commands/stars';
 import { handleCommandsListCommand } from '../commands/commands';
 import { handleRouletteCommand } from '../commands/roulette';
+import { User } from '../../classes/User';
 
 export type CommandProps = {
   chatClient: ChatClient;
@@ -19,9 +20,10 @@ export const handleMessages = (chatClient: ChatClient) => {
     console.debug('message.ts user l.17', user);
     console.debug('--------------------------------------------');
     const allCommands = await prismaClient.command.findMany();
-    const currentUser = await prismaClient.user.findFirst({
-      where: { twitchUsername: user.toLocaleLowerCase() },
-    });
+
+    const currentUserInstance = new User(user.toLocaleLowerCase());
+    const currentUser = await currentUserInstance.getUser();
+
     allCommands.forEach((command) => {
       if (message.toLocaleLowerCase().startsWith(`!${command.name}`)) {
         chatClient.say(channel, command.content);
@@ -43,20 +45,12 @@ export const handleMessages = (chatClient: ChatClient) => {
 
     if (!message.startsWith('!') && user.toLocaleLowerCase() !== 'bot_aztro') {
       if (!currentUser) {
-        await prismaClient.user.create({
-          data: {
-            twitchUsername: user.toLocaleLowerCase(),
-            stars: msg.userInfo.isSubscriber ? 2 : 1,
-          },
-        });
-      } else if (currentUser && new Date().getTime() - currentUser.updatedAt.getTime() > 5000) {
-        await prismaClient.user.update({
-          where: { id: currentUser?.id },
-          data: {
-            stars: { increment: msg.userInfo.isSubscriber ? 2 : 1 },
-            updatedAt: new Date(),
-          },
-        });
+        new User(user.toLocaleLowerCase()).createUser({ initialStars: msg.userInfo.isSubscriber ? 2 : 1 });
+      } else {
+        if (new Date().getTime() - currentUser.updatedAt.getTime() > 5000) {
+          const userWallet = await currentUserInstance.getWallet();
+          userWallet.earnStars(msg.userInfo.isSubscriber ? 2 : 1);
+        }
       }
     }
   });
