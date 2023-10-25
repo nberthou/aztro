@@ -1,19 +1,17 @@
 import { ChatClient } from '@twurple/chat';
-import type { User as UserType } from '@prisma/client';
 import type { CommandProps } from '../handlers/message';
 import { User } from '../../classes/User';
 
 type ShifumiProps = {
   chatClient: ChatClient;
   userChoice: 'pierre' | 'feuille' | 'ciseaux';
-  currentUser: UserType | null;
+  currentUser: User;
   amount: number;
 };
 const shifumi = async ({ chatClient, userChoice, currentUser, amount }: ShifumiProps) => {
   const choices = ['pierre', 'feuille', 'ciseaux'];
   const computerChoice = choices[Math.floor(Math.random() * choices.length)];
-  const currentUserInstance = new User(currentUser?.twitchUsername);
-  const userWallet = await currentUserInstance.getWallet();
+  const { wallet: userWallet, twitchUsername } = currentUser;
 
   const WINNING_COMBINATIONS = {
     pierre: 'ciseaux',
@@ -25,30 +23,27 @@ const shifumi = async ({ chatClient, userChoice, currentUser, amount }: ShifumiP
   if (userChoice === computerChoice) {
     chatClient.say(
       process.env.TWITCH_CHANNEL_NAME ?? '',
-      `@${currentUser?.twitchUsername}, on a fait égalité ! Tu ne perds rien, et tu ne gagnes rien ! azgoldLUL`
+      `@${twitchUsername}, on a fait égalité ! Tu ne perds rien, et tu ne gagnes rien ! azgoldLUL`
     );
   } else if (userHasWon) {
-    userWallet.earnStars(amount * 1.5);
+    await userWallet.earnStars(amount * 1.5);
     chatClient.say(
       process.env.TWITCH_CHANNEL_NAME ?? '',
-      `@${currentUser?.twitchUsername}, j'ai fait ${computerChoice}, tu as donc gagné ! Tu remportes ${
-        amount * 1.5
-      } étoiles ! azgoldHF`
+      `@${twitchUsername}, j'ai fait ${computerChoice}, tu as donc gagné ! Tu remportes ${amount * 1.5} étoiles ! azgoldHF`
     );
   } else {
-    userWallet.spendStars(amount);
+    await userWallet.spendStars(amount);
     chatClient.say(
       process.env.TWITCH_CHANNEL_NAME ?? '',
-      `@${currentUser?.twitchUsername}, j'ai fait ${computerChoice}, tu as donc perdu ! Tu perds ${amount} étoiles ! azgoldSad`
+      `@${twitchUsername}, j'ai fait ${computerChoice}, tu as donc perdu ! Tu perds ${amount} étoiles ! azgoldSad`
     );
   }
 };
 
 export const handleShifumiCommand = async ({ chatClient, user, message, channel }: CommandProps) => {
-  const currentUserInstance = new User(user.toLocaleLowerCase());
-  const currentUser = await currentUserInstance.getUser();
-  const userWallet = await currentUserInstance.getWallet();
-  const stars = await userWallet.getStars();
+  const currentUser = await new User(user.toLocaleLowerCase()).init({ initialStars: 0 });
+  const { wallet: userWallet } = currentUser;
+  const { stars } = userWallet;
   if (message.startsWith('!shifumi')) {
     const choices = ['pierre', 'feuille', 'ciseaux'];
     if (!stars || stars < 1) {

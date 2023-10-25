@@ -3,9 +3,17 @@ import { prismaClient } from '../utils';
 
 export class Wallet {
   private userId: any;
+  public stars: number;
 
   constructor(userId: string) {
     this.userId = userId;
+    this.stars = 0;
+  }
+
+  public async init(): Promise<Wallet> {
+    const user = await this.getUser();
+    this.stars = user.stars;
+    return this;
   }
 
   private async getUser(): Promise<User> {
@@ -22,11 +30,6 @@ export class Wallet {
     return user;
   }
 
-  public async getStars(): Promise<number> {
-    const user = await this.getUser();
-    return user.stars;
-  }
-
   public async earnStars(amount: number): Promise<void> {
     await prismaClient.user.update({
       where: {
@@ -39,6 +42,7 @@ export class Wallet {
         updatedAt: new Date(),
       },
     });
+    this.stars += amount;
   }
 
   public async spendStars(amount: number): Promise<boolean> {
@@ -55,6 +59,7 @@ export class Wallet {
           updatedAt: new Date(),
         },
       });
+      this.stars -= amount;
       return true;
     } else {
       throw new Error('Not enough stars');

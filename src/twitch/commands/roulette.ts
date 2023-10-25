@@ -3,9 +3,10 @@ import { User } from '../../classes/User';
 
 export const handleRouletteCommand = async ({ chatClient, message, user, channel }: CommandProps) => {
   if (message.startsWith('!roulette')) {
-    const currentUserInstance = new User(user.toLocaleLowerCase());
-    const userWallet = await currentUserInstance.getWallet();
-    const stars = await userWallet.getStars();
+    const currentUser = await new User(user.toLocaleLowerCase()).init({ initialStars: 0 });
+    const { wallet: userWallet } = currentUser;
+    const { stars } = userWallet;
+
     const amount = message.split(' ')[1] === 'all' ? stars : parseInt(message.split(' ')[1]);
     const hasWon = Math.random() > 0.5;
     if (!amount || isNaN(amount)) {

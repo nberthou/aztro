@@ -29,6 +29,7 @@ module.exports = {
       clientCommands = clientCommands.map((command) => command.data.toJSON());
       const guild = getGuild();
       guild?.commands.set([]);
+      client.commands?.clear();
 
       const data = (await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: clientCommands })) as any[];
       console.log(`${data.length} commandes ont été actualisées.`);
