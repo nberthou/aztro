@@ -44,26 +44,24 @@ export const handleShifumiCommand = async ({ chatClient, user, message, channel 
   const currentUser = await new User(user.toLocaleLowerCase()).init({ initialStars: 0 });
   const { wallet: userWallet } = currentUser;
   const { stars } = userWallet;
-  if (message.startsWith('!shifumi')) {
-    const choices = ['pierre', 'feuille', 'ciseaux'];
-    if (!stars || stars < 1) {
-      chatClient.say(channel, `Tu n'as pas d'étoiles à miser.`);
-    } else if (!choices.includes(message.split(' ')[1])) {
-      chatClient.say(channel, `Tu dois choisir entre pierre, feuille ou ciseaux.`);
-    } else if (
-      !message.split(' ')[2] ||
-      (message.split(' ')[2] && message.split(' ')[2] !== 'all' && isNaN(parseInt(message.split(' ')[2])))
-    ) {
-      chatClient.say(channel, `Tu dois miser un nombre d'étoiles.`);
-    } else if (message.split(' ')[2] && parseInt(message.split(' ')[2]) > stars) {
-      chatClient.say(channel, `Tu n'as pas assez d'étoiles pour miser autant.`);
-    } else {
-      shifumi({
-        chatClient,
-        currentUser,
-        userChoice: message.split(' ')[1] as 'pierre' | 'feuille' | 'ciseaux',
-        amount: message.split(' ')[2] === 'all' ? stars : parseInt(message.split(' ')[2]),
-      });
-    }
+  const choices = ['pierre', 'feuille', 'ciseaux'];
+  if (!stars || stars < 1) {
+    chatClient.say(channel, `Tu n'as pas d'étoiles à miser.`);
+  } else if (!choices.includes(message.split(' ')[1])) {
+    chatClient.say(channel, `Tu dois choisir entre pierre, feuille ou ciseaux.`);
+  } else if (
+    !message.split(' ')[2] ||
+    (message.split(' ')[2] && message.split(' ')[2] !== 'all' && isNaN(parseInt(message.split(' ')[2])))
+  ) {
+    chatClient.say(channel, `Tu dois miser un nombre d'étoiles.`);
+  } else if (message.split(' ')[2] && parseInt(message.split(' ')[2]) > stars) {
+    chatClient.say(channel, `Tu n'as pas assez d'étoiles pour miser autant.`);
+  } else {
+    shifumi({
+      chatClient,
+      currentUser,
+      userChoice: message.split(' ')[1] as 'pierre' | 'feuille' | 'ciseaux',
+      amount: message.split(' ')[2] === 'all' ? stars : parseInt(message.split(' ')[2]),
+    });
   }
 };

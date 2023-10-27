@@ -36,11 +36,24 @@ export const handleMessages = (chatClient: ChatClient) => {
       isUserMod: msg.userInfo.isMod || msg.userInfo.isBroadcaster,
     };
 
-    handleShifumiCommand(commandProps);
-    handleStarsCommand(commandProps);
-    handleRouletteCommand(commandProps);
-    handleCommandsListCommand(commandProps);
+    const firstWord = message.split(' ')[0];
 
+    switch (firstWord) {
+      case '!shifumi':
+        handleShifumiCommand(commandProps);
+        break;
+      case '!stars':
+        handleStarsCommand(commandProps);
+        break;
+      case '!roulette':
+        handleRouletteCommand(commandProps);
+        break;
+      case '!commands':
+        handleCommandsListCommand(commandProps);
+        break;
+      default:
+        break;
+    }
     if (!message.startsWith('!') && user.toLocaleLowerCase() !== 'bot_aztro') {
       const { wallet: userWallet } = currentUser;
       if (new Date().getTime() - currentUser.updatedAt.getTime() > 5000) {
