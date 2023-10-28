@@ -5,6 +5,7 @@ import { handleCommandsListCommand } from '../commands/commands';
 import { handleRouletteCommand } from '../commands/roulette';
 import { User } from '../../classes/User';
 import { CommandList } from '../../classes/Command';
+import { handleDeathCounterCommand } from '../commands/deathCounter';
 
 export type CommandProps = {
   chatClient: ChatClient;
@@ -16,9 +17,6 @@ export type CommandProps = {
 
 export const handleMessages = (chatClient: ChatClient) => {
   chatClient.onMessage(async (channel, user, message, msg) => {
-    console.debug('--------------------------------------------');
-    console.debug('message.ts user l.17', user);
-    console.debug('--------------------------------------------');
     const allCommands = await new CommandList().getCommands();
     const currentUser = await new User(user.toLocaleLowerCase()).init({ initialStars: msg.userInfo.isSubscriber ? 2 : 1 });
 
@@ -50,6 +48,9 @@ export const handleMessages = (chatClient: ChatClient) => {
         break;
       case '!commands':
         handleCommandsListCommand(commandProps);
+        break;
+      case '!deaths':
+        handleDeathCounterCommand(commandProps);
         break;
       default:
         break;
