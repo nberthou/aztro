@@ -1,21 +1,18 @@
-import twitchServer from './twitch/main';
-import discordServer from './discord/main';
 import dotenv from 'dotenv';
-import { prismaClient } from './utils';
+import { Aztrobot } from './classes/Aztrobot';
 
 dotenv.config();
+const aztrobot = new Aztrobot();
 
 async function main() {
-  await twitchServer();
-  await discordServer();
+  await aztrobot.start();
 }
 
 main()
   .then(async () => {
-    await prismaClient.$disconnect();
+    await aztrobot.connectToDb();
   })
   .catch(async (e) => {
     console.error(e);
-    await prismaClient.$disconnect();
-    process.exit(1);
+    await aztrobot.disconnectFromDb();
   });
