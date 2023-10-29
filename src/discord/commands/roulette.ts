@@ -9,8 +9,8 @@ import {
   EmbedBuilder,
   Colors,
 } from 'discord.js';
-import { prismaClient } from '../../utils';
 import { getEmoji } from '../utils';
+import { User } from '../../classes/User';
 
 module.exports = {
   data: new SlashCommandBuilder().setName('roulette').setDescription('Joue à la roulette pour gagner ou perdre des étoiles !'),
@@ -40,48 +40,31 @@ module.exports = {
       return;
     }
 
-    const user = await prismaClient.user.findFirst({
-      where: { discordUsername: interaction.user.username?.toLocaleLowerCase() },
-    });
+    const user = await new User(interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
 
-    if (!user || user.stars === 0) {
+    if (user.wallet.stars === 0) {
       const failureEmbed = new EmbedBuilder().setColor(Colors.Red).setTitle('Erreur').setDescription(`Tu n'as pas d'étoiles !`);
-      if (!user) {
-        await prismaClient.user.create({
-          data: {
-            discordUsername: interaction.user.username?.toLocaleLowerCase(),
-            stars: 0,
-          },
-        });
-      }
       await modalInteraction.editReply({ embeds: [failureEmbed] });
       return;
     }
 
-    if (user.stars < starsAmount) {
+    if (user.wallet.stars < starsAmount) {
       const failureEmbed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setTitle('Erreur')
-        .setDescription(`Tu n'as pas assez d'étoiles ! Tu n'en as que ${user.stars} !`);
+        .setDescription(`Tu n'as pas assez d'étoiles ! Tu n'en as que ${user.wallet.stars} !`);
       await modalInteraction.editReply({ embeds: [failureEmbed] });
       return;
     }
 
     const hasWon = Math.random() > 0.5;
-    await prismaClient.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        stars: hasWon ? { increment: starsAmount } : { decrement: starsAmount },
-      },
-    });
+    hasWon ? await user.wallet.earnStars(starsAmount) : await user.wallet.spendStars(starsAmount);
     const resultEmbed = new EmbedBuilder()
       .setColor(Colors.Gold)
       .setTitle('Résultat de la roulette')
       .setDescription(
         `Tu as ${hasWon ? 'gagné' : 'perdu'} ${starsAmount} étoiles ! Tu as désormais ${
-          hasWon ? user.stars + starsAmount : user.stars - starsAmount
+          hasWon ? user.wallet.stars + starsAmount : user.wallet.stars - starsAmount
         } étoiles ! ${getEmoji(hasWon ? 'azgoldStar' : 'azgoldSad')}`
       );
     await modalInteraction.editReply({ embeds: [resultEmbed] });

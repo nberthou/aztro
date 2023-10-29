@@ -1,8 +1,8 @@
 import { Client, GatewayIntentBits, SlashCommandBuilder, Collection, CommandInteraction } from 'discord.js';
-import { prismaClient } from '../utils';
 import path from 'path';
 import { readdirSync } from 'fs';
 import { getEmoji } from './utils';
+import { CommandList } from '../classes/Command';
 
 type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
@@ -10,7 +10,7 @@ export const client: DiscordClient = new Client({ intents: [GatewayIntentBits.Gu
 async function main() {
   const token = process.env.DISCORD_TOKEN ?? '';
 
-  const commands = await prismaClient.command.findMany();
+  const commands = await new CommandList().getCommands();
 
   const commandsData = commands.map((command) => ({
     data: new SlashCommandBuilder().setName(command.name).setDescription(`${command.content.slice(0, 50)}...`),

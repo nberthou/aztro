@@ -12,8 +12,8 @@ import {
   ButtonBuilder,
   ComponentType,
 } from 'discord.js';
-import { prismaClient } from '../../utils';
 import { getEmoji } from '../utils';
+import { User } from '../../classes/User';
 
 enum ShifumiChoice {
   ROCK = 'ROCK',
@@ -70,27 +70,20 @@ module.exports = {
       return;
     }
 
-    const user = await prismaClient.user.findFirst({ where: { discordUsername: interaction.user.username.toLocaleLowerCase() } });
+    // const user = await prismaClient.user.findFirst({ where: { discordUsername: interaction.user.username.toLocaleLowerCase() } });
+    const user = await new User(interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
 
-    if (!user || user.stars === 0) {
+    if (user.wallet.stars === 0) {
       const failureEmbed = new EmbedBuilder().setColor(Colors.Red).setTitle('Erreur').setDescription(`Tu n'as pas d'étoiles !`);
-      if (!user) {
-        await prismaClient.user.create({
-          data: {
-            discordUsername: interaction.user.username.toLocaleLowerCase(),
-            stars: 0,
-          },
-        });
-      }
       await modalInteraction.editReply({ embeds: [failureEmbed] });
       return;
     }
 
-    if (user.stars < starsAmount) {
+    if (user.wallet.stars < starsAmount) {
       const failureEmbed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setTitle('Erreur')
-        .setDescription(`Tu n'as pas assez d'étoiles ! Tu n'en as que ${user.stars} !`);
+        .setDescription(`Tu n'as pas assez d'étoiles ! Tu n'en as que ${user.wallet.stars} !`);
       await modalInteraction.editReply({ embeds: [failureEmbed] });
       return;
     }
@@ -128,10 +121,10 @@ module.exports = {
           .setTitle('Pierre, feuille, ciseaux')
           .setDescription(
             `Tu as gagné ! Tu remportes ${starsAmount * 1.5} étoiles ! Tu as désormais ${
-              user.stars + starsAmount * 1.5
+              user.wallet.stars + starsAmount * 1.5
             } ${getEmoji('azgoldHF')}`
           );
-        await prismaClient.user.update({ where: { id: user.id }, data: { stars: { increment: starsAmount * 1.5 } } });
+        await user.wallet.earnStars(starsAmount * 1.5);
         await modalInteraction.editReply({ embeds: [embed], components: [] });
         return;
       } else {
@@ -139,11 +132,11 @@ module.exports = {
           .setColor(Colors.Red)
           .setTitle('Pierre, feuille, ciseaux')
           .setDescription(
-            `Tu as perdu ! Tu perds ${starsAmount} étoiles ! Tu as désormais ${user.stars - starsAmount} étoiles ! ${getEmoji(
-              'azgoldSad'
-            )}`
+            `Tu as perdu ! Tu perds ${starsAmount} étoiles ! Tu as désormais ${
+              user.wallet.stars - starsAmount
+            } étoiles ! ${getEmoji('azgoldSad')}`
           );
-        await prismaClient.user.update({ where: { id: user.id }, data: { stars: { decrement: starsAmount } } });
+        await user.wallet.spendStars(starsAmount);
         await modalInteraction.editReply({ embeds: [embed], components: [] });
         return;
       }

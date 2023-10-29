@@ -1,3 +1,4 @@
+import { getEmoji, getGuild } from '../utils';
 import {
   SlashCommandBuilder,
   CommandInteraction,
@@ -8,9 +9,7 @@ import {
   EmbedBuilder,
   Colors,
 } from 'discord.js';
-import { prismaClient } from '../../utils';
-import { getEmoji, getGuild } from '../utils';
-import { User } from '@prisma/client';
+import { User } from '../../classes/User';
 
 enum ButtonType {
   NEXT = 'NEXT',
@@ -21,12 +20,7 @@ module.exports = {
   data: new SlashCommandBuilder().setName('rank').setDescription("Regarde qui sont les personnes possédant le plus d'étoiles !"),
   async execute(interaction: CommandInteraction) {
     let count = 0;
-    let users = await prismaClient.user.findMany({
-      orderBy: { stars: 'desc' },
-      take: 10,
-      skip: count * 10,
-    });
-
+    let users = await new User().getRank(count);
     const backButton = new ButtonBuilder()
       .setCustomId('BACK')
       .setLabel('◀️ Précédent')
@@ -47,7 +41,7 @@ module.exports = {
             const guildMember = guildMembers?.find((member) => !member.user.bot && member.user.username === user.discordUsername);
             return {
               name: guildMember?.displayName ?? (`${user.twitchUsername} (twitch)` || 'Utilisateur inconnu'),
-              value: `${user.stars} ${getEmoji('azgoldStar')}`,
+              value: `${user.wallet.stars} ${getEmoji('azgoldStar')}`,
             };
           })
         )
@@ -64,11 +58,7 @@ module.exports = {
       } else {
         count -= 1;
       }
-      users = await prismaClient.user.findMany({
-        orderBy: { stars: 'desc' },
-        take: 10,
-        skip: count * 10,
-      });
+      users = await new User().getRank(count);
 
       const usersRankEmbed = getUsersRankEmbed(users);
       if (interaction.createdTimestamp + 60000 < Date.now()) {

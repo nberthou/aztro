@@ -1,22 +1,12 @@
 import { SlashCommandBuilder, CommandInteraction, EmbedBuilder, Colors } from 'discord.js';
-import { prismaClient } from '../../utils';
 import { getEmoji } from '../utils';
+import { User } from '../../classes/User';
 
 module.exports = {
   data: new SlashCommandBuilder().setName('stars').setDescription("Regarde combien d'étoiles tu possèdes actuellement."),
   async execute(interaction: CommandInteraction) {
-    const currentUser = await prismaClient.user.findFirst({
-      where: {
-        discordUsername: interaction.member?.user.username.toLocaleLowerCase(),
-      },
-    });
-    if (!currentUser) {
-      await prismaClient.user.create({
-        data: {
-          discordUsername: interaction?.user.username.toLocaleLowerCase(),
-          stars: 0,
-        },
-      });
+    const currentUser = await new User(interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
+    if (currentUser.wallet.stars === 0) {
       await interaction.reply({
         ephemeral: true,
         content: `Tu as actuellement 0 étoile. Commence à discuter pour gagner des étoiles ! ${getEmoji('azgoldStar')}`,
@@ -25,7 +15,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor(Colors.Gold)
         .setTitle('Étoiles')
-        .setDescription(`Tu as actuellement ${currentUser.stars} étoiles ! ${getEmoji('azgoldStar')}`);
+        .setDescription(`Tu as actuellement ${currentUser.wallet.stars} étoiles ! ${getEmoji('azgoldStar')}`);
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
