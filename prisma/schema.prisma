@@ -17,6 +17,8 @@ model User {
   stars           Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
+  guild           Guild?   @relation(fields: [guildId], references: [id])
+  guildId         String?  @db.ObjectId
 }
 
 model Command {
@@ -33,6 +35,7 @@ model Guild {
   color     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  members   User[]
 }
 
 model DeathCounter {

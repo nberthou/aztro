@@ -1,18 +1,26 @@
-import type { User } from '@prisma/client';
+import type { User, Guild } from '@prisma/client';
 import { prismaClient } from '../utils';
+// import { Guild } from './Guild';
 
 export class Wallet {
-  private userId: any;
+  private userId: string;
   public stars: number;
+  private walletType: 'USER' | 'GUILD';
 
-  constructor(userId: string) {
+  constructor(userId: string, walletType: 'USER' | 'GUILD' = 'USER') {
     this.userId = userId;
     this.stars = 0;
+    this.walletType = walletType;
   }
 
   public async init(): Promise<Wallet> {
-    const user = await this.getUser();
-    this.stars = user.stars;
+    if (this.walletType === 'USER') {
+      const user = await this.getUser();
+      this.stars = user.stars;
+    } else {
+      const guild = await this.getGuild();
+      this.stars = guild.bank;
+    }
     return this;
   }
 
@@ -28,6 +36,20 @@ export class Wallet {
     }
 
     return user;
+  }
+
+  private async getGuild(): Promise<Guild> {
+    const guild = await prismaClient.guild.findUnique({
+      where: {
+        id: this.userId,
+      },
+    });
+
+    if (!guild) {
+      throw new Error('Guild not found');
+    }
+
+    return guild;
   }
 
   public async earnStars(amount: number): Promise<void> {

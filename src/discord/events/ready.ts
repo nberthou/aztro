@@ -15,26 +15,29 @@ module.exports = {
   once: true,
   async execute(client: DiscordClient) {
     console.log(`Je suis actuellement connecté sur Discord.`);
-    try {
-      const commands = await prismaClient.command.findMany();
-      console.log(`Actualisation des ${commands.length} commandes d'Aztro.`);
-      let clientCommands = [];
-      console.debug('--------------------------------------------');
-      console.debug(client.commands!.keys());
-      console.debug('--------------------------------------------');
-      for (const key of client.commands!.keys()) {
-        clientCommands.push(client.commands?.get(key));
-      }
-
-      clientCommands = clientCommands.map((command) => command.data.toJSON());
-      const guild = getGuild();
-      guild?.commands.set([]);
-      client.commands?.clear();
-
-      const data = (await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: clientCommands })) as any[];
-      console.log(`${data.length} commandes ont été actualisées.`);
-    } catch (error) {
-      console.error(error);
+    const commands = await prismaClient.command.findMany();
+    console.log(`Actualisation des ${commands.length} commandes d'Aztro.`);
+    let clientCommands: any[] = [];
+    for (const key of client.commands!.keys()) {
+      clientCommands.push(client.commands?.get(key));
     }
+
+    clientCommands = clientCommands.map((command) => command.data.toJSON());
+    const guild = getGuild();
+    guild?.commands.set([]);
+    console.debug('--------------------------------------------');
+    console.debug(
+      'ready.ts commandNames l.27',
+      clientCommands.map((command) => command.name)
+    );
+    console.debug('--------------------------------------------');
+    (async () => {
+      await rest
+        .put(Routes.applicationCommands(clientId), { body: clientCommands })
+        .then((data) => {
+          console.log(`${(data as unknown[]).length} commandes ont été actualisées.`);
+        })
+        .catch(console.error);
+    })();
   },
 };

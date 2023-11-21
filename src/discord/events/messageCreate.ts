@@ -1,5 +1,4 @@
 import { Events, Message } from 'discord.js';
-import { prismaClient } from '../../utils';
 import { User } from '../../classes/User';
 
 module.exports = {
