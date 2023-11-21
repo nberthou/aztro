@@ -1,13 +1,13 @@
 import { Wallet } from './Wallet';
 import { prismaClient } from '../utils';
-import { Guild, GuildName } from './Guild';
+// import { Guild, GuildName } from './Guild';
 
 export class User {
   public twitchUsername?: string | null;
   public discordUsername?: string | null;
   public wallet: Wallet;
   public updatedAt: Date;
-  public guild?: Guild | void;
+  // public guild?: Guild | void;
 
   constructor(twitchUsername?: string | null, discordUsername?: string | null) {
     this.twitchUsername = twitchUsername;
@@ -26,7 +26,7 @@ export class User {
     if (user) {
       this.wallet = await new Wallet(user!.id).init();
       this.updatedAt = user?.updatedAt;
-      this.guild = await new Guild(user!.id).init();
+      // this.guild = await new Guild(user!.id).init();
       return this;
     } else {
       return await this.createUser({ initialStars });
@@ -147,5 +147,5 @@ export class User {
     return users;
   }
 
-  public async joinGuild(guildName: GuildName): Promise<void> {}
+  // public async joinGuild(guildName: GuildName): Promise<void> {}
 }
