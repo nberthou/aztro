@@ -1,4 +1,12 @@
-import { Client, Collection, CommandInteraction, GatewayIntentBits, SlashCommandBuilder } from 'discord.js';
+import {
+  Client,
+  Collection,
+  CommandInteraction,
+  GatewayIntentBits,
+  GuildBasedChannel,
+  SlashCommandBuilder,
+  TextChannel,
+} from 'discord.js';
 import path from 'path';
 import { readdirSync } from 'fs';
 import { GuildEmoji } from 'discord.js';
@@ -84,5 +92,17 @@ export class DiscordBot {
       return guild?.emojis.cache.find((em: GuildEmoji) => em.name === emojiName) || null;
     }
     return null;
+  }
+
+  static sendMessageToAnnounceChannel(message: string) {
+    const guild = DiscordBot.getGuild();
+    if (guild) {
+      const channel = guild.channels.cache.find(
+        (ch) => ch.name === process.env.DISCORD_ANNOUNCEMENT_CHANNEL_ID ?? ''
+      ) as TextChannel;
+      if (channel) {
+        channel.send(message);
+      }
+    }
   }
 }

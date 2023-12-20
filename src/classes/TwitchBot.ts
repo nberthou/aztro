@@ -2,10 +2,13 @@ import { RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { PubSubClient } from '@twurple/pubsub';
 import { promises as fs } from 'fs';
+import { ApiClient } from '@twurple/api';
+import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { handleMessages } from '../twitch/handlers/message';
 import { handleRaid } from '../twitch/handlers/raid';
 import { handleCommunitySubs, handleResubs, handleSubGifts, handleSubs } from '../twitch/handlers/subs';
 import { handleRedemptions } from '../twitch/handlers/redemption';
+import { DiscordBot } from './DiscordBot';
 
 export class TwitchBot {
   private readonly clientId: string;
@@ -13,6 +16,8 @@ export class TwitchBot {
   private readonly channelId: string;
   private authProvider: RefreshingAuthProvider;
   private pubSubProvider: RefreshingAuthProvider;
+  static apiClient: ApiClient;
+  static listener: EventSubWsListener;
 
   constructor() {
     this.clientId = process.env.TWITCH_CLIENT_ID ?? '';
@@ -26,6 +31,11 @@ export class TwitchBot {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
     });
+    TwitchBot.apiClient = new ApiClient({ authProvider: this.authProvider });
+    TwitchBot.listener = new EventSubWsListener({
+      apiClient: TwitchBot.apiClient,
+    });
+    TwitchBot.listener.start();
 
     return this;
   }
@@ -51,6 +61,12 @@ export class TwitchBot {
       channels: [process.env.TWITCH_CHANNEL_NAME ?? ''],
     });
     const pubSubClient = new PubSubClient({ authProvider: this.pubSubProvider });
+
+    TwitchBot.listener.onStreamOnline(this.channelId, (handler) => {
+      DiscordBot.sendMessageToAnnounceChannel(
+        `Le live de ${handler.broadcasterDisplayName} commence ! Rejoins-nous sur https://twitch.tv/${handler.broadcasterName} !`
+      );
+    });
 
     chatClient.onAuthenticationSuccess(() => console.log(`Je suis maintenant connecté sur Twitch !`));
     chatClient.onAuthenticationFailure((error) => console.error(`Impossible de se connecter sur Twitch : ${error}`));
