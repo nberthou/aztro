@@ -166,7 +166,7 @@ const handleGuildInfo = async (interaction: CommandInteraction) => {
 module.exports = {
   data: new SlashCommandBuilder().setName('guild').setDescription('Vois les infos sur ta guilde ou rejoins-en une !'),
   async execute(interaction: CommandInteraction) {
-    const currentUser = await new User(interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
+    const currentUser = await new User(null, interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
     if (!currentUser.guild) {
       await handleNoGuild(interaction);
     } else {
