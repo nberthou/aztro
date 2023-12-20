@@ -127,7 +127,7 @@ const handleNoGuild = async (interaction: CommandInteraction) => {
 };
 
 const handleGuildInfo = async (interaction: CommandInteraction) => {
-  const currentUser = await new User(interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
+  const currentUser = await new User(null, interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
   const guild = await new Guild(currentUser.id).init();
 
   if (!guild) {
