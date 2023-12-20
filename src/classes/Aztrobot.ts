@@ -1,9 +1,13 @@
-import twitchServer from '../twitch/main';
-import discordServer from '../discord/main';
 import { prismaClient } from '../utils';
+import { TwitchBot } from './TwitchBot';
+import { DiscordBot } from './DiscordBot';
 
 export class Aztrobot {
+  private twitchBot: TwitchBot;
+  private discordBot: DiscordBot;
   constructor() {
+    this.twitchBot = new TwitchBot();
+    this.discordBot = new DiscordBot();
     console.log("Aztrobot en cours d'initialisation.");
   }
 
@@ -12,11 +16,11 @@ export class Aztrobot {
     await this.startTwitchBot();
   }
   private async startTwitchBot() {
-    await twitchServer();
+    await this.twitchBot.init();
   }
 
   private async startDiscordBot() {
-    await discordServer();
+    await this.discordBot.init();
   }
 
   public async connectToDb() {

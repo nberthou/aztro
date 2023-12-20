@@ -19,6 +19,7 @@ model User {
   updatedAt       DateTime @default(now()) @updatedAt
   guild           Guild?   @relation(fields: [guildId], references: [id])
   guildId         String?  @db.ObjectId
+  isGuildLeader   Boolean  @default(false)
 }
 
 model Command {

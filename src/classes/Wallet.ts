@@ -1,6 +1,5 @@
 import type { User, Guild } from '@prisma/client';
 import { prismaClient } from '../utils';
-// import { Guild } from './Guild';
 
 export class Wallet {
   private userId: string;

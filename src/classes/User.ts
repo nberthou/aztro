@@ -1,19 +1,23 @@
 import { Wallet } from './Wallet';
 import { prismaClient } from '../utils';
-// import { Guild, GuildName } from './Guild';
+import { Guild, GuildName } from './Guild';
 
 export class User {
   public twitchUsername?: string | null;
   public discordUsername?: string | null;
   public wallet: Wallet;
   public updatedAt: Date;
-  // public guild?: Guild | void;
+  public guild?: Guild | null;
+  public id: string;
+  public isGuildLeader: boolean;
 
   constructor(twitchUsername?: string | null, discordUsername?: string | null) {
     this.twitchUsername = twitchUsername;
     this.discordUsername = discordUsername;
     this.wallet = new Wallet('');
     this.updatedAt = new Date();
+    this.id = '';
+    this.isGuildLeader = false;
   }
 
   async init({ initialStars }: { initialStars: number }): Promise<User> {
@@ -26,7 +30,9 @@ export class User {
     if (user) {
       this.wallet = await new Wallet(user!.id).init();
       this.updatedAt = user?.updatedAt;
-      // this.guild = await new Guild(user!.id).init();
+      this.guild = await new Guild(user!.id).init();
+      this.id = user.id;
+      this.isGuildLeader = user.isGuildLeader;
       return this;
     } else {
       return await this.createUser({ initialStars });
@@ -45,6 +51,8 @@ export class User {
     this.discordUsername = user.discordUsername;
     this.wallet = await new Wallet(user.id).init();
     this.updatedAt = new Date();
+    this.id = user.id;
+    this.isGuildLeader = user.isGuildLeader;
     return this;
   }
 
@@ -147,5 +155,50 @@ export class User {
     return users;
   }
 
-  // public async joinGuild(guildName: GuildName): Promise<void> {}
+  public async joinGuild(guildName: GuildName): Promise<void> {
+    const guilds = await prismaClient.guild.findMany();
+
+    let guild = await prismaClient.guild.findFirst({
+      where: {
+        name: guildName,
+      },
+    });
+
+    if (!guild) {
+      guild = await prismaClient.guild.create({
+        data: {
+          name: guildName,
+          members: {
+            connect: {
+              id: this.id,
+            },
+          },
+          bank: 0,
+          guildId: guildName.toLocaleLowerCase(),
+          color: guildName === GuildName.FUSEE ? 15548997 : guildName === GuildName.PLANETE ? 5793266 : 5763719,
+        },
+      });
+    }
+
+    const user = await prismaClient.user.findFirst({
+      where: {
+        OR: [{ twitchUsername: this.twitchUsername }, { discordUsername: this.discordUsername }],
+      },
+    });
+    if (!user) {
+      return;
+    }
+    await prismaClient.guild.update({
+      where: {
+        id: guild.id,
+      },
+      data: {
+        members: {
+          connect: {
+            id: user.id,
+          },
+        },
+      },
+    });
+  }
 }

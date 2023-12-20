@@ -10,7 +10,7 @@ import {
   Colors,
 } from 'discord.js';
 import { User } from '../../classes/User';
-import { getEmoji } from '../utils';
+import { DiscordBot } from '../../classes/DiscordBot';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -51,7 +51,7 @@ module.exports = {
           .setColor(Colors.Green)
           .setTitle('Synchronisation réussie.')
           .setDescription(
-            `Le pseudo Twitch a bien été relié à ton compte Discord. Désormais, lorsque tu écris un message sur Discord, tu gagnes une étoile ! ${getEmoji(
+            `Le pseudo Twitch a bien été relié à ton compte Discord. Désormais, lorsque tu écris un message sur Discord, tu gagnes une étoile ! ${DiscordBot.getEmoji(
               'azgoldHF'
             )}`
           );

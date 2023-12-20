@@ -1,6 +1,6 @@
 import { Events, Client, Collection, REST, Routes } from 'discord.js';
 import { prismaClient } from '../../utils';
-import { getGuild } from '../utils';
+import { DiscordBot } from '../../classes/DiscordBot';
 
 type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
@@ -23,14 +23,10 @@ module.exports = {
     }
 
     clientCommands = clientCommands.map((command) => command.data.toJSON());
-    const guild = getGuild();
+
+    const guild = DiscordBot.getGuild();
     guild?.commands.set([]);
-    console.debug('--------------------------------------------');
-    console.debug(
-      'ready.ts commandNames l.27',
-      clientCommands.map((command) => command.name)
-    );
-    console.debug('--------------------------------------------');
+
     (async () => {
       await rest
         .put(Routes.applicationCommands(clientId), { body: clientCommands })

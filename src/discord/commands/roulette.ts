@@ -9,8 +9,8 @@ import {
   EmbedBuilder,
   Colors,
 } from 'discord.js';
-import { getEmoji } from '../utils';
 import { User } from '../../classes/User';
+import { DiscordBot } from '../../classes/DiscordBot';
 
 module.exports = {
   data: new SlashCommandBuilder().setName('roulette').setDescription('Joue à la roulette pour gagner ou perdre des étoiles !'),
@@ -65,7 +65,7 @@ module.exports = {
       .setDescription(
         `Tu as ${hasWon ? 'gagné' : 'perdu'} ${starsAmount} étoiles ! Tu as désormais ${
           hasWon ? user.wallet.stars + starsAmount : user.wallet.stars - starsAmount
-        } étoiles ! ${getEmoji(hasWon ? 'azgoldStar' : 'azgoldSad')}`
+        } étoiles ! ${DiscordBot.getEmoji(hasWon ? 'azgoldStar' : 'azgoldSad')}`
       );
     await modalInteraction.editReply({ embeds: [resultEmbed] });
   },

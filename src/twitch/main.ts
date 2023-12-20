@@ -32,7 +32,6 @@ async function main() {
       await fs.writeFile(__dirname + '/pubSubTokens.json', JSON.stringify(newTokenData, null, 4), 'utf-8')
   );
 
-  // await authProvider.addUserForToken(tokenData, ['chat', 'channel:read:redemptions']);
   await authProvider.addUser(channelId, tokenData, ['chat', 'channel:read:redemptions']);
   await pubSubAuthProvider.addUser(channelId, pubSubTokenData, ['channel:read:redemptions']);
   const chatClient = new ChatClient({ authProvider, channels: [process.env.TWITCH_CHANNEL_NAME ?? ''] });

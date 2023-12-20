@@ -1,8 +1,8 @@
 import { Client, GatewayIntentBits, SlashCommandBuilder, Collection, CommandInteraction } from 'discord.js';
 import path from 'path';
 import { readdirSync } from 'fs';
-import { getEmoji } from './utils';
 import { CommandList } from '../classes/Command';
+import { DiscordBot } from '../classes/DiscordBot';
 
 type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
@@ -18,7 +18,7 @@ async function main() {
       await interaction.reply(
         command.content
           .split(' ')
-          .map((w) => getEmoji(w) ?? w)
+          .map((w) => DiscordBot.getEmoji(w) ?? w)
           .join(' ')
       );
     },

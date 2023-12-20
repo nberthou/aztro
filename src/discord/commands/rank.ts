@@ -1,4 +1,3 @@
-import { getEmoji, getGuild } from '../utils';
 import {
   SlashCommandBuilder,
   CommandInteraction,
@@ -10,6 +9,7 @@ import {
   Colors,
 } from 'discord.js';
 import { User } from '../../classes/User';
+import { DiscordBot } from '../../classes/DiscordBot';
 
 enum ButtonType {
   NEXT = 'NEXT',
@@ -29,7 +29,7 @@ module.exports = {
     const nextButton = new ButtonBuilder().setCustomId('NEXT').setLabel('Suivant ▶️').setStyle(ButtonStyle.Primary);
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(backButton, nextButton);
 
-    const guild = getGuild();
+    const guild = DiscordBot.getGuild();
 
     const getUsersRankEmbed = (users: User[]): EmbedBuilder => {
       const guildMembers = guild?.members.cache;
@@ -41,7 +41,7 @@ module.exports = {
             const guildMember = guildMembers?.find((member) => !member.user.bot && member.user.username === user.discordUsername);
             return {
               name: guildMember?.displayName ?? (`${user.twitchUsername} (twitch)` || 'Utilisateur inconnu'),
-              value: `${user.wallet.stars} ${getEmoji('azgoldStar')}`,
+              value: `${user.wallet.stars} ${DiscordBot.getEmoji('azgoldStar')}`,
             };
           })
         )

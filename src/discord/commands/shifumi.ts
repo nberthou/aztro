@@ -12,8 +12,8 @@ import {
   ButtonBuilder,
   ComponentType,
 } from 'discord.js';
-import { getEmoji } from '../utils';
 import { User } from '../../classes/User';
+import { DiscordBot } from '../../classes/DiscordBot';
 
 enum ShifumiChoice {
   ROCK = 'ROCK',
@@ -70,7 +70,6 @@ module.exports = {
       return;
     }
 
-    // const user = await prismaClient.user.findFirst({ where: { discordUsername: interaction.user.username.toLocaleLowerCase() } });
     const user = await new User(interaction.user.username?.toLocaleLowerCase()).init({ initialStars: 0 });
 
     if (user.wallet.stars === 0) {
@@ -108,7 +107,7 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setColor(Colors.Gold)
           .setTitle('Pierre, feuille, ciseaux')
-          .setDescription(`Égalité ! Tu récupères tes ${starsAmount} étoiles ! ${getEmoji('azgoldLUL')}`);
+          .setDescription(`Égalité ! Tu récupères tes ${starsAmount} étoiles ! ${DiscordBot.getEmoji('azgoldLUL')}`);
         await modalInteraction.editReply({ embeds: [embed] });
         return;
       } else if (
@@ -122,7 +121,7 @@ module.exports = {
           .setDescription(
             `Tu as gagné ! Tu remportes ${starsAmount * 1.5} étoiles ! Tu as désormais ${
               user.wallet.stars + starsAmount * 1.5
-            } ${getEmoji('azgoldHF')}`
+            } ${DiscordBot.getEmoji('azgoldHF')}`
           );
         await user.wallet.earnStars(starsAmount * 1.5);
         await modalInteraction.editReply({ embeds: [embed], components: [] });
@@ -134,7 +133,7 @@ module.exports = {
           .setDescription(
             `Tu as perdu ! Tu perds ${starsAmount} étoiles ! Tu as désormais ${
               user.wallet.stars - starsAmount
-            } étoiles ! ${getEmoji('azgoldSad')}`
+            } étoiles ! ${DiscordBot.getEmoji('azgoldSad')}`
           );
         await user.wallet.spendStars(starsAmount);
         await modalInteraction.editReply({ embeds: [embed], components: [] });
