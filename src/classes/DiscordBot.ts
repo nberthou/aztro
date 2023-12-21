@@ -98,7 +98,7 @@ export class DiscordBot {
     const guild = DiscordBot.getGuild();
     if (guild) {
       const channel = guild.channels.cache.find(
-        (ch) => ch.name === process.env.DISCORD_ANNOUNCEMENT_CHANNEL_ID ?? ''
+        (ch) => ch.id === process.env.DISCORD_ANNOUNCEMENT_CHANNEL_ID ?? ''
       ) as TextChannel;
       if (channel) {
         channel.send(message);

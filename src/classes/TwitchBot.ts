@@ -64,7 +64,7 @@ export class TwitchBot {
 
     TwitchBot.listener.onStreamOnline(this.channelId, (handler) => {
       DiscordBot.sendMessageToAnnounceChannel(
-        `Le live de ${handler.broadcasterDisplayName} commence ! Rejoins-nous sur https://twitch.tv/${handler.broadcasterName} !`
+        `@everyone Le live de ${handler.broadcasterDisplayName} commence ! Rejoins-nous sur https://twitch.tv/${handler.broadcasterName} !`
       );
     });
 
