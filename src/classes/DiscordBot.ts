@@ -105,4 +105,19 @@ export class DiscordBot {
       }
     }
   }
+
+  static moveUserToVoiceChannel(userName: string, channelId: string) {
+    const guild = DiscordBot.getGuild();
+    if (guild) {
+      const member = guild.members.cache.find((member) => member.user.username.toLowerCase() === userName.toLowerCase());
+      if (member) {
+        member.voice.setChannel(channelId);
+      }
+      if (channelId === process.env.DISCORD_CORNER_CHANNEL_ID) {
+        setTimeout(() => {
+          member?.voice.setChannel(process.env.DISCORD_STREAM_CHANNEL_ID ?? '');
+        }, 15000);
+      }
+    }
+  }
 }

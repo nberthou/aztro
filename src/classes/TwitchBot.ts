@@ -9,6 +9,7 @@ import { handleRaid } from '../twitch/handlers/raid';
 import { handleCommunitySubs, handleResubs, handleSubGifts, handleSubs } from '../twitch/handlers/subs';
 import { handleRedemptions } from '../twitch/handlers/redemption';
 import { DiscordBot } from './DiscordBot';
+import { Bot } from '@twurple/easy-bot';
 
 export class TwitchBot {
   private readonly clientId: string;
@@ -18,6 +19,7 @@ export class TwitchBot {
   private pubSubProvider: RefreshingAuthProvider;
   static apiClient: ApiClient;
   static listener: EventSubWsListener;
+  static bot: Bot;
 
   constructor() {
     this.clientId = process.env.TWITCH_CLIENT_ID ?? '';
@@ -36,6 +38,10 @@ export class TwitchBot {
       apiClient: TwitchBot.apiClient,
     });
     TwitchBot.listener.start();
+    TwitchBot.bot = new Bot({
+      channels: [process.env.TWITCH_CHANNEL_NAME ?? ''],
+      authProvider: this.authProvider,
+    });
 
     return this;
   }
@@ -54,7 +60,16 @@ export class TwitchBot {
         await fs.writeFile(__dirname + '/../twitch/pubSubTokens.json', JSON.stringify(newTokenData, null, 4), 'utf-8')
     );
 
-    await this.authProvider.addUser(this.channelId, tokenData, ['chat', 'channel:read:redemptions']);
+    await this.authProvider.addUser(this.channelId, tokenData, [
+      'chat',
+      'channel:read:redemptions',
+      'moderator:manage:banned_users',
+    ]);
+    await this.authProvider.addUser(process.env.TWITCH_BOT_ID!, tokenData, [
+      'chat',
+      'channel:read:redemptions',
+      'moderator:manage:banned_users',
+    ]);
     await this.pubSubProvider.addUser(this.channelId, pubSubTokenData, ['channel:read:redemptions']);
     const chatClient = new ChatClient({
       authProvider: this.authProvider,

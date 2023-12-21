@@ -7,6 +7,7 @@ import { handleCooldownCommand } from '../commands/cooldown';
 import { User } from '../../classes/User';
 import { CommandList } from '../../classes/Command';
 import { handleDeathCounterCommand } from '../commands/deathCounter';
+import { handleAuCoinCommand } from '../commands/aucoin';
 
 export type CommandProps = {
   chatClient: ChatClient;
@@ -56,6 +57,8 @@ export const handleMessages = (chatClient: ChatClient) => {
       case '!cd':
         handleCooldownCommand(commandProps);
       default:
+      case '!aucoin':
+        handleAuCoinCommand(commandProps);
         break;
     }
     if (!message.startsWith('!') && user.toLocaleLowerCase() !== 'bot_aztro') {
