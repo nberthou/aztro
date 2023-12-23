@@ -15,16 +15,19 @@ export class TwitchBot {
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly channelId: string;
+  private chatClient: ChatClient;
   private authProvider: RefreshingAuthProvider;
   private pubSubProvider: RefreshingAuthProvider;
   static apiClient: ApiClient;
   static listener: EventSubWsListener;
   static bot: Bot;
+  private intervalRandomMessage: NodeJS.Timeout | null;
 
   constructor() {
     this.clientId = process.env.TWITCH_CLIENT_ID ?? '';
     this.clientSecret = process.env.TWITCH_CLIENT_SECRET ?? '';
     this.channelId = process.env.TWITCH_CHANNEL_ID ?? '';
+    this.intervalRandomMessage = null;
     this.authProvider = new RefreshingAuthProvider({
       clientId: this.clientId,
       clientSecret: this.clientSecret,
@@ -32,6 +35,10 @@ export class TwitchBot {
     this.pubSubProvider = new RefreshingAuthProvider({
       clientId: this.clientId,
       clientSecret: this.clientSecret,
+    });
+    this.chatClient = new ChatClient({
+      authProvider: this.authProvider,
+      channels: [process.env.TWITCH_CHANNEL_NAME ?? ''],
     });
     TwitchBot.apiClient = new ApiClient({ authProvider: this.authProvider });
     TwitchBot.listener = new EventSubWsListener({
@@ -44,6 +51,21 @@ export class TwitchBot {
     });
 
     return this;
+  }
+
+  private async getRandomMessage(channel: string) {
+    const messages = JSON.parse(await fs.readFile(__dirname + '/../twitch/randomMessages.json', 'utf-8'));
+    const interval = Math.floor(Math.random() * (900000 - 300000 + 1)) + 300000;
+    let lastSentMessageIndex: number | null = null;
+    this.intervalRandomMessage = setInterval(() => {
+      let randomIndex = Math.floor(Math.random() * messages.length);
+      while (lastSentMessageIndex === randomIndex) {
+        randomIndex = Math.floor(Math.random() * messages.length);
+      }
+      lastSentMessageIndex = randomIndex;
+      const randomMessage = messages[randomIndex];
+      this.chatClient.say(channel, randomMessage);
+    }, interval);
   }
 
   public async init() {
@@ -71,20 +93,24 @@ export class TwitchBot {
       'moderator:manage:banned_users',
     ]);
     await this.pubSubProvider.addUser(this.channelId, pubSubTokenData, ['channel:read:redemptions']);
-    const chatClient = new ChatClient({
-      authProvider: this.authProvider,
-      channels: [process.env.TWITCH_CHANNEL_NAME ?? ''],
-    });
+
     const pubSubClient = new PubSubClient({ authProvider: this.pubSubProvider });
 
     TwitchBot.listener.onStreamOnline(this.channelId, (handler) => {
       DiscordBot.sendMessageToAnnounceChannel(
         `@everyone Le live de ${handler.broadcasterDisplayName} commence ! Rejoins-nous sur https://twitch.tv/${handler.broadcasterName} !`
       );
+      this.getRandomMessage(process.env.TWITCH_CHANNEL_NAME ?? '');
     });
 
-    chatClient.onAuthenticationSuccess(() => console.log(`Je suis maintenant connecté sur Twitch !`));
-    chatClient.onAuthenticationFailure((error) => console.error(`Impossible de se connecter sur Twitch : ${error}`));
+    TwitchBot.listener.onStreamOffline(this.channelId, (handler) => {
+      if (this.intervalRandomMessage) {
+        clearInterval(this.intervalRandomMessage);
+      }
+    });
+
+    this.chatClient.onAuthenticationSuccess(() => console.log(`Je suis maintenant connecté sur Twitch !`));
+    this.chatClient.onAuthenticationFailure((error) => console.error(`Impossible de se connecter sur Twitch : ${error}`));
 
     pubSubClient.onListenError((handler, error, userInitiated) => {
       console.debug('--------------------------------------------');
@@ -94,14 +120,14 @@ export class TwitchBot {
       console.debug('--------------------------------------------');
     });
 
-    await handleMessages(chatClient);
-    await handleRaid(chatClient);
-    await handleCommunitySubs(chatClient);
-    await handleSubs(chatClient);
-    await handleResubs(chatClient);
-    await handleSubGifts(chatClient);
-    await handleRedemptions(pubSubClient, chatClient);
+    await handleMessages(this.chatClient);
+    await handleRaid(this.chatClient);
+    await handleCommunitySubs(this.chatClient);
+    await handleSubs(this.chatClient);
+    await handleResubs(this.chatClient);
+    await handleSubGifts(this.chatClient);
+    await handleRedemptions(pubSubClient, this.chatClient);
 
-    chatClient.connect();
+    this.chatClient.connect();
   }
 }

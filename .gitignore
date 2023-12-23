@@ -3,3 +3,4 @@ node_modules
 .env
 **/*/tokens.json
 **/*/pubSubTokens.json
+**/*/randomMessages.json
