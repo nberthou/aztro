@@ -55,7 +55,7 @@ export class TwitchBot {
 
   private async getRandomMessage(channel: string) {
     const messages = JSON.parse(await fs.readFile(__dirname + '/../twitch/randomMessages.json', 'utf-8'));
-    const interval = Math.floor(Math.random() * (900000 - 300000 + 1)) + 300000;
+    const interval = 1000 * 60 * 15;
     let lastSentMessageIndex: number | null = null;
     this.intervalRandomMessage = setInterval(() => {
       let randomIndex = Math.floor(Math.random() * messages.length);
@@ -97,6 +97,7 @@ export class TwitchBot {
     const pubSubClient = new PubSubClient({ authProvider: this.pubSubProvider });
 
     TwitchBot.listener.onStreamOnline(this.channelId, (handler) => {
+      console.log('Le stream démarre !');
       DiscordBot.sendMessageToAnnounceChannel(
         `@everyone Le live de ${handler.broadcasterDisplayName} commence ! Rejoins-nous sur https://twitch.tv/${handler.broadcasterName} !`
       );
@@ -104,12 +105,19 @@ export class TwitchBot {
     });
 
     TwitchBot.listener.onStreamOffline(this.channelId, (handler) => {
+      console.log('Le stream est arrêté !');
       if (this.intervalRandomMessage) {
         clearInterval(this.intervalRandomMessage);
       }
     });
 
-    this.chatClient.onAuthenticationSuccess(() => console.log(`Je suis maintenant connecté sur Twitch !`));
+    this.chatClient.onAuthenticationSuccess(() => {
+      console.debug('--------------------------------------------');
+      console.debug('TwitchBot.ts this. l.114', this.intervalRandomMessage);
+      console.debug('--------------------------------------------');
+
+      console.log(`Je suis maintenant connecté sur Twitch !`);
+    });
     this.chatClient.onAuthenticationFailure((error) => console.error(`Impossible de se connecter sur Twitch : ${error}`));
 
     pubSubClient.onListenError((handler, error, userInitiated) => {
