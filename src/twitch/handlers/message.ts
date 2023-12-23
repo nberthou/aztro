@@ -56,9 +56,9 @@ export const handleMessages = (chatClient: ChatClient) => {
         break;
       case '!cd':
         handleCooldownCommand(commandProps);
-      default:
       case '!aucoin':
         handleAuCoinCommand(commandProps);
+      default:
         break;
     }
     if (!message.startsWith('!') && user.toLocaleLowerCase() !== 'bot_aztro') {
