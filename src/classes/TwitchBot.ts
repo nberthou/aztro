@@ -96,10 +96,15 @@ export class TwitchBot {
 
     const pubSubClient = new PubSubClient({ authProvider: this.pubSubProvider });
 
-    TwitchBot.listener.onStreamOnline(this.channelId, (handler) => {
+    TwitchBot.listener.onStreamOnline(this.channelId, async (handler) => {
       console.log('Le stream démarre !');
       DiscordBot.sendMessageToAnnounceChannel(
         `@everyone Le live de ${handler.broadcasterDisplayName} commence ! Rejoins-nous sur https://twitch.tv/${handler.broadcasterName} !`
+      );
+      const currentGame = await handler.getStream();
+      this.chatClient.say(
+        (process.env.TWITCH_CHANNEL_NAME ?? '')!,
+        `Bonjour à tous, Azgold streamera sur ${currentGame?.gameName} aujourd'hui ! Have fun ! azgoldHF`
       );
       this.getRandomMessage(process.env.TWITCH_CHANNEL_NAME ?? '');
     });
@@ -108,16 +113,11 @@ export class TwitchBot {
       console.log('Le stream est arrêté !');
       if (this.intervalRandomMessage) {
         clearInterval(this.intervalRandomMessage);
+        this.intervalRandomMessage = null;
       }
     });
 
-    this.chatClient.onAuthenticationSuccess(() => {
-      console.debug('--------------------------------------------');
-      console.debug('TwitchBot.ts this. l.114', this.intervalRandomMessage);
-      console.debug('--------------------------------------------');
-
-      console.log(`Je suis maintenant connecté sur Twitch !`);
-    });
+    this.chatClient.onAuthenticationSuccess(() => console.log(`Je suis maintenant connecté sur Twitch !`));
     this.chatClient.onAuthenticationFailure((error) => console.error(`Impossible de se connecter sur Twitch : ${error}`));
 
     pubSubClient.onListenError((handler, error, userInitiated) => {
@@ -128,7 +128,7 @@ export class TwitchBot {
       console.debug('--------------------------------------------');
     });
 
-    await handleMessages(this.chatClient);
+    await handleMessages(this.chatClient, this.intervalRandomMessage);
     await handleRaid(this.chatClient);
     await handleCommunitySubs(this.chatClient);
     await handleSubs(this.chatClient);

@@ -1,11 +1,14 @@
 import { ChatClient } from '@twurple/chat';
+import { differenceInCalendarDays } from 'date-fns';
+
+import { User } from '../../classes/User';
+import { CommandList } from '../../classes/Command';
+
 import { handleShifumiCommand } from '../commands/shifumi';
 import { handleStarsCommand } from '../commands/stars';
 import { handleCommandsListCommand } from '../commands/commands';
 import { handleRouletteCommand } from '../commands/roulette';
 import { handleCooldownCommand } from '../commands/cooldown';
-import { User } from '../../classes/User';
-import { CommandList } from '../../classes/Command';
 import { handleDeathCounterCommand } from '../commands/deathCounter';
 import { handleAuCoinCommand } from '../commands/aucoin';
 import { handleFollowageCommand } from '../commands/followage';
@@ -19,7 +22,7 @@ export type CommandProps = {
   userId: string;
 };
 
-export const handleMessages = (chatClient: ChatClient) => {
+export const handleMessages = (chatClient: ChatClient, intervalRandomMessage: NodeJS.Timeout | null) => {
   chatClient.onMessage(async (channel, user, message, msg) => {
     const allCommands = await new CommandList().getCommands();
     const currentUser = await new User(user.toLocaleLowerCase()).init({ initialStars: msg.userInfo.isSubscriber ? 2 : 1 });
@@ -71,7 +74,10 @@ export const handleMessages = (chatClient: ChatClient) => {
     }
     if (!message.startsWith('!') && user.toLocaleLowerCase() !== 'bot_aztro') {
       const { wallet: userWallet } = currentUser;
-      if (new Date().getTime() - currentUser.updatedAt.getTime() > 5000) {
+      if (differenceInCalendarDays(new Date(), currentUser.updatedAt) > 0 && intervalRandomMessage) {
+        chatClient.say(channel, `Bonjour ${user}, comment ça va ? azgoldHey`);
+      }
+      if (new Date().getTime() - currentUser.updatedAt.getTime() > 5000 && intervalRandomMessage) {
         await userWallet?.earnStars(msg.userInfo.isSubscriber ? 2 : 1);
       }
     }

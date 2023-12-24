@@ -32,6 +32,7 @@
     "@twurple/eventsub-ws": "^7.0.6",
     "@twurple/pubsub": "^7.0.6",
     "bson": "^5.4.0",
+    "date-fns": "^3.0.6",
     "discord.js": "^14.12.1",
     "dotenv": "^16.3.1"
   }
