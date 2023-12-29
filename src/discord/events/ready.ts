@@ -1,6 +1,21 @@
-import { Events, Client, Collection, REST, Routes } from 'discord.js';
+import {
+  Events,
+  Client,
+  Collection,
+  REST,
+  Routes,
+  BaseGuildTextChannel,
+  CommandInteraction,
+  ButtonBuilder,
+  ActionRowBuilder,
+  ButtonStyle,
+  ComponentType,
+  EmbedBuilder,
+  Colors,
+} from 'discord.js';
 import { prismaClient } from '../../utils';
 import { DiscordBot } from '../../classes/DiscordBot';
+import { User } from '../../classes/User';
 
 type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
@@ -9,6 +24,24 @@ const clientId = process.env.DISCORD_CLIENT_ID ?? '';
 const guildId = process.env.DISCORD_GUILD_ID ?? '';
 
 const rest = new REST().setToken(token);
+
+export const getUsersRankEmbed = (users: User[]): EmbedBuilder => {
+  const guild = DiscordBot.getGuild();
+  const guildMembers = guild?.members.cache;
+  return new EmbedBuilder()
+    .setColor(Colors.Gold)
+    .setTitle('Classement des étoiles')
+    .addFields(
+      ...users.map((user) => {
+        const guildMember = guildMembers?.find((member) => !member.user.bot && member.user.username === user.discordUsername);
+        return {
+          name: guildMember?.displayName ?? (`${user.twitchUsername} (twitch)` || 'Utilisateur inconnu'),
+          value: `${user.wallet.stars} ${DiscordBot.getEmoji('azgoldStar')}`,
+        };
+      })
+    )
+    .setTimestamp();
+};
 
 module.exports = {
   name: Events.ClientReady,
@@ -35,5 +68,49 @@ module.exports = {
         })
         .catch(console.error);
     })();
+
+    setInterval(
+      () => {
+        if (guild) {
+          const channel = guild.channels.cache.find(
+            (ch) => ch.id === process.env.DISCORD_RANK_CHANNEL_ID ?? ''
+          ) as BaseGuildTextChannel;
+          channel.messages.fetch({ limit: 1 }).then(async (messages) => {
+            const message = messages.first();
+            if (message) {
+              let count = 0;
+              let users = await new User().getRank(count);
+              const backButton = new ButtonBuilder()
+                .setCustomId('BACK')
+                .setLabel('◀️ Précédent')
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(count === 0);
+              const usersRankEmbed = getUsersRankEmbed(users);
+              const nextButton = new ButtonBuilder().setCustomId('NEXT').setLabel('Suivant ▶️').setStyle(ButtonStyle.Primary);
+              const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(backButton, nextButton);
+              const response = await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
+              const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+              collector.on('collect', async ({ customId }) => {
+                if (customId === 'NEXT') {
+                  count += 1;
+                } else {
+                  count -= 1;
+                }
+                users = await new User().getRank(count);
+
+                const usersRankEmbed = getUsersRankEmbed(users);
+                if (message.createdTimestamp + 60000 < Date.now()) {
+                  await message.edit({ components: [], embeds: [usersRankEmbed], content: '' });
+                } else {
+                  backButton.setDisabled(count === 0);
+                  await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
+                }
+              });
+            }
+          });
+        }
+      },
+      1000 * 60 * 5
+    );
   },
 };
