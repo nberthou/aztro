@@ -21,8 +21,6 @@ type DiscordClient = Client<boolean> & { commands?: Collection<string, any> };
 
 const token = process.env.DISCORD_TOKEN ?? '';
 const clientId = process.env.DISCORD_CLIENT_ID ?? '';
-const guildId = process.env.DISCORD_GUILD_ID ?? '';
-const guild = DiscordBot.getGuild();
 
 const rest = new REST().setToken(token);
 
@@ -45,6 +43,7 @@ export const getUsersRankEmbed = (users: User[]): EmbedBuilder => {
 };
 
 const updateRankMessage = () => {
+  const guild = DiscordBot.getGuild();
   setInterval(
     () => {
       if (guild) {
@@ -90,6 +89,43 @@ const updateRankMessage = () => {
   );
 };
 
+const manageRolesMessage = async () => {
+  const guild = DiscordBot.getGuild();
+  if (guild) {
+    const channel = guild.channels.cache.find(
+      (ch) => ch.id === process.env.DISCORD_ROLES_CHANNEL_ID ?? ''
+    ) as BaseGuildTextChannel;
+    channel.messages.fetch({ limit: 1 }).then(async (messages): Promise<any> => {
+      const message = messages.first();
+      if (!message) {
+        const rolesEmbed = new EmbedBuilder()
+          .setColor(Colors.Gold)
+          .setTitle('Choisis un rôle')
+          .setDescription('Clique sur les boutons ci-dessous pour obtenir les rôles correspondants.')
+          .addFields({
+            name: '🫘 Fall Guys',
+            value: 'Pour chercher et trouver des copains avec qui jouer à Fall Guys !',
+          });
+        const response = await channel.send({ embeds: [rolesEmbed] });
+        response.react('🫘');
+      } else {
+        const collector = message.createReactionCollector();
+        collector.on('collect', (reaction, user) => {
+          switch (reaction.emoji.name) {
+            case '🫘':
+              const member = guild.members.cache.find((member) => member.user.id === user.id);
+              const role = guild.roles.cache.find((role) => role.name === 'Fall Guys');
+              if (member && role) {
+                member.roles.add(role);
+              }
+              break;
+          }
+        });
+      }
+    });
+  }
+};
+
 module.exports = {
   name: Events.ClientReady,
   once: true,
@@ -102,6 +138,7 @@ module.exports = {
       clientCommands.push(client.commands?.get(key));
     }
 
+    const guild = DiscordBot.getGuild();
     clientCommands = clientCommands.map((command) => command.data.toJSON());
 
     guild?.commands.set([]);
@@ -116,5 +153,6 @@ module.exports = {
     })();
 
     updateRankMessage();
+    manageRolesMessage();
   },
 };

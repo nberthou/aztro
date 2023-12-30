@@ -24,7 +24,12 @@ export class DiscordBot {
   private readonly token: string;
   private commands: Command[];
   static client: DiscordClient = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers],
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildMessageReactions,
+    ],
   });
 
   constructor() {
