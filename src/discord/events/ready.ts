@@ -89,7 +89,7 @@ module.exports = {
               const nextButton = new ButtonBuilder().setCustomId('NEXT').setLabel('Suivant ▶️').setStyle(ButtonStyle.Primary);
               const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(backButton, nextButton);
               const response = await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
-              const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+              const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 300000 });
               collector.on('collect', async ({ customId }) => {
                 if (customId === 'NEXT') {
                   count += 1;
