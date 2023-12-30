@@ -56,7 +56,7 @@ const handleJoinGuildDisplay = async (interaction: CommandInteraction) => {
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(rocketButton, planetButton, cometButton);
 
   const response = await interaction.editReply({ embeds: [joinGuildEmbed], components: [actionRow] });
-  const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+  const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
 
   collector.on('collect', async ({ customId }) => {
     joinGuild(interaction, customId as GuildName);
@@ -116,7 +116,7 @@ const handleNoGuild = async (interaction: CommandInteraction) => {
 
   const noGuildEmbed = getNoGuildEmbed();
   const response = await interaction.reply({ components: [actionRow], embeds: [noGuildEmbed], ephemeral: true });
-  const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+  const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
 
   collector.on('collect', async ({ customId }) => {
     switch (customId) {

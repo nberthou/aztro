@@ -99,7 +99,7 @@ module.exports = {
     const shifumiActionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(rockButton, paperButton, scissorsButton);
 
     const response = await modalInteraction.editReply({ components: [shifumiActionRow], embeds: [shifumiStartEmbed] });
-    const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+    const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
 
     collector.on('collect', async ({ customId: userChoice }) => {
       const botChoice = choices[Math.floor(Math.random() * choices.length)].customId;

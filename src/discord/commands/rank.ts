@@ -29,7 +29,7 @@ export const getRank = async (interaction: CommandInteraction): Promise<any> => 
 
   const usersRankEmbed = getUsersRankEmbed(users);
   const response = await interaction.reply({ components: [actionRow], embeds: [usersRankEmbed] });
-  const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+  const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button });
 
   collector.on('collect', async ({ customId }) => {
     if (customId === ButtonType.NEXT) {
