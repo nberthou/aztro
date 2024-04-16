@@ -135,7 +135,7 @@ const handleGuildInfo = async (interaction: CommandInteraction) => {
     return;
   }
 
-  const guildLeader = guild.members.find((member) => member.isGuildLeader);
+  const guildLeader = await guild.getLeader();
 
   const guildInfoEmbed = new EmbedBuilder()
     .setColor(guild.color)

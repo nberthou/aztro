@@ -41,7 +41,7 @@ export const getRank = async (interaction: CommandInteraction): Promise<any> => 
 
     const usersRankEmbed = getUsersRankEmbed(users);
     if (interaction.createdTimestamp + 60000 < Date.now()) {
-      await interaction.editReply({ components: [], embeds: [usersRankEmbed] });
+      await interaction.editReply({ components: [actionRow], embeds: [usersRankEmbed] });
     } else {
       backButton.setDisabled(count === 0);
       await interaction.editReply({ components: [actionRow], embeds: [usersRankEmbed] });

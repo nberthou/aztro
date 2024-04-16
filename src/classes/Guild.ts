@@ -66,8 +66,18 @@ export class Guild {
     return null;
   }
 
-  public async getGuilds() {
+  static async getGuilds() {
     const guilds = await prismaClient.guild.findMany();
     return guilds;
+  }
+
+  public async getLeader() {
+    const leader = await prismaClient.user.findFirst({
+      where: {
+        guildId: this.guildId,
+        isGuildLeader: true,
+      },
+    });
+    return leader;
   }
 }
