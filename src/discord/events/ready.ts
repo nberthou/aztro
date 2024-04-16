@@ -75,7 +75,7 @@ const updateRankMessage = () => {
 
               const usersRankEmbed = getUsersRankEmbed(users);
               if (message.createdTimestamp + 300000 < Date.now()) {
-                await message.edit({ components: [], embeds: [usersRankEmbed], content: '' });
+                await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
               } else {
                 backButton.setDisabled(count === 0);
                 await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
