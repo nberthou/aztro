@@ -44,6 +44,8 @@ export const getUsersRankEmbed = (users: User[]): EmbedBuilder => {
 
 const updateRankMessage = () => {
   const guild = DiscordBot.getGuild();
+  let count = 0;
+
   setInterval(
     () => {
       if (guild) {
@@ -53,7 +55,6 @@ const updateRankMessage = () => {
         channel.messages.fetch({ limit: 1 }).then(async (messages) => {
           const message = messages.first();
           if (message) {
-            let count = 0;
             let users = await new User().getRank(count);
             const backButton = new ButtonBuilder()
               .setCustomId('BACK')
@@ -72,12 +73,11 @@ const updateRankMessage = () => {
                 count -= 1;
               }
               users = await new User().getRank(count);
-
               const usersRankEmbed = getUsersRankEmbed(users);
-              if (message.createdTimestamp + 300000 < Date.now()) {
+              backButton.setDisabled(count === 0);
+              if (message.createdTimestamp + 30000 < Date.now()) {
                 await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
               } else {
-                backButton.setDisabled(count === 0);
                 await message.edit({ components: [actionRow], embeds: [usersRankEmbed], content: '' });
               }
             });
